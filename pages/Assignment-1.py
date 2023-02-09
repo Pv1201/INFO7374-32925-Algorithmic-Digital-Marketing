@@ -170,9 +170,7 @@ def data_cleaning():
         st.write(transaction.groupby(['online_order','product_class','product_line'])['profit(K)'].sum())
 
 #function for great_expectation computation
-def expectation(): 
-    transaction,CustomerAddress,CustomerDemographic,NewCustomerList=get_data()    
-    
+def expectation():     
 # =============================================================================
 #     validation_result = transaction.expect_column_values_to_be_in_set(
 #         column="online_order",
