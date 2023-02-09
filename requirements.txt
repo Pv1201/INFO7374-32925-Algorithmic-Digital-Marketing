@@ -2,4 +2,4 @@ pandas
 pandas_profiling 
 plotly
 dash
-streamlit-pandas-profiling
+streamlit_pandas_profiling
