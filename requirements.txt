@@ -2,3 +2,4 @@ pandas
 pandas_profiling 
 plotly
 dash
+streamlit_pandas_profiling
