@@ -9,6 +9,7 @@ Created on Mon Feb  6 15:11:43 2023
 import pandas as pd
 from pandas_profiling import ProfileReport
 import great_expectations as ge
+import requests
 
 #Visual libraries
 import plotly.express as px
@@ -19,6 +20,7 @@ import plotly.graph_objects as go
 
 #Dashboard and Report libraries
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.markdown("# Assignment-1")
 st.sidebar.header("Assignment-1")
@@ -40,7 +42,9 @@ global CustomerDemographic
 global CustomerAddress
 global NewCustomerList
 
+workbook_url='https://github.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/blob/main/KPMG_VI_New_raw_data_update_final.xlsx'
 
+#function for EDA
 def data_cleaning():
     transcaction=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="Transactions")
     CustomerDemographic=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerDemographic")
@@ -99,7 +103,7 @@ def data_cleaning():
     profits['below_avg']=profits['profit(K)'].apply(lambda x: x if x<profits['profit(K)'].mean() else 0)
     
 
-    tab1,tab2=st.tabs(["Finding the spending cycle","Marketing Effectiveness"])
+    tab1,tab2,tab3=st.tabs(["Finding the spending cycle","Marketing Effectiveness","Let's talk profits"])
     with tab1:
         st.write('### Finding the spending cycle')
 
@@ -114,7 +118,7 @@ def data_cleaning():
                          )
 
         st.plotly_chart(fig)
-        st.markdown("<h3 style='text-align: center; color: white;'>Above Averge Monthly Spenders</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: black;'>Above Averge Monthly Spenders</h3>", unsafe_allow_html=True)
         
         fig = px.sunburst(profits,
                   path=['month', 'wealth_segment', 'product_size'],values='below_avg',color_discrete_sequence=px.colors.qualitative.Pastel)
@@ -122,7 +126,7 @@ def data_cleaning():
                           height=800,
                          )
         st.plotly_chart(fig)
-        st.markdown("<h3 style='text-align: center; color: white;'>Below Averge Monthly Spenders</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: black;'>Below Averge Monthly Spenders</h3>", unsafe_allow_html=True)
     with tab2:
         st.write("### Sector of new customer acquired")
         fig1 = go.Figure()
@@ -155,21 +159,47 @@ def data_cleaning():
         fig.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.new_female_count,orientation='h',marker_color='rgb(144,238,144)',name='New Female Customers'))
         fig.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.old_female_count,orientation='h',marker_color='crimson',name='Old Female Customers'))
         st.plotly_chart(fig)
+        
+    with tab3:
+        st.write('#### What are the numbers from on online and offline sales')
+        st.write(transcaction.groupby(['online_order'])['profit(K)'].sum())
+        st.write('#### What are the numbers for different class of product')
+        st.write(transcaction.groupby(['online_order','product_class'])['profit(K)'].sum())
+        st.write('#### What are the numbers for different line of product')
+        st.write(transcaction.groupby(['online_order','product_class','product_line'])['profit(K)'].sum())
 
-
+#function for great_expectation computation
 def expectation():
     transcaction=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="Transactions")
     CustomerDemographic=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerDemographic")
     CustomerAddress=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerAddress")
     NewCustomerList=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="NewCustomerList")
     
-    
     reset_df_header(transcaction)
     reset_df_header(CustomerAddress)
     reset_df_header(NewCustomerList)    
     NewCustomerList = NewCustomerList.loc[:, NewCustomerList.columns.notna()]
+            
+    #st.write(transcaction.expect_column_values_to_be_unique(column='brand'))
+    validation_result = transcaction.expect_column_values_to_be_in_set(
+        column="online_order",
+        value_set=[True,False],
+        result_format={
+            "result_format": "BOOLEAN_ONLY",
+            "unexpected_index_column_names": ["online_order"],
+            "return_unexpected_index_query": True,
+        },
+    )
+    #st.write(validation_result.success)
+    #st.write(validation_result)
+    HtmlFile = open("C:/INFO7374-32925-Algorithmic-Digital-Marketing/great_expectations/uncommitted/data_docs/local_site/validations/Assignment1_ge/__none__/20230208T183522.594784Z/eda493f1d25126cede31f768221bf0e2.html", 'r', encoding='utf-8')
+    source_code = HtmlFile.read()
+    components.html(source_code, width = 800, height = 800, scrolling = True)
 
-    st.write(transcaction.expect_column_values_to_be_unique(column='brand'))
+
+#function for EDA
+def profiling():    
+    pass
 
 if __name__ == "__main__":
     
@@ -177,6 +207,7 @@ if __name__ == "__main__":
     'SELECT SECTION',
     ('EDA', 'Pandas Profiling & Data Quality Analysis', 'Great Expectations'))
         
+    
     if option_selected=="Pandas Profiling & Data Quality Analysis":
         st.write("Fuck yeah")
             
