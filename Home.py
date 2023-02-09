@@ -29,6 +29,11 @@ st.sidebar.success("Select a Assignment above.")
 
 st.markdown(
     """
-Assignment's'
+    INFO7374-32925-Algorithmic-Digital-Marketing Assignment's.
+    
+    **👈 Select Assignment's from the sidebar** 
+    ### Visit the github repository link's?
+    - Assignment-1[Github](https://github.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing)
+
 """
 )

@@ -8,27 +8,43 @@ Created on Mon Feb  6 15:11:43 2023
 #Importing libraries
 import pandas as pd
 from pandas_profiling import ProfileReport
-import great_expectations as ge
-import requests
 
 #Visual libraries
 import plotly.express as px
 # from dash import Dash, dcc, html, Input, Output
 # from plotly.offline import plot
-from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 #Dashboard and Report libraries
 import streamlit as st
 import streamlit.components.v1 as components
+from streamlit_pandas_profiling import st_profile_report
+
 
 st.markdown("# Assignment-1")
 st.sidebar.header("Assignment-1")
 
-#reset the customer row names to proper values
-def reset_df_header(df):
-    df.columns=df.loc[0]
-    df=df.drop(index=0,inplace=True)
+def get_data():
+    global transaction
+    global CustomerDemographic
+    global CustomerAddress
+    global NewCustomerList
+
+    tran_url=('https://docs.google.com/spreadsheets/d/1i1K42EZurcdozq0wc2JgR0RbqM470dLQ/edit#gid=1362789858')
+    newcust_url='https://docs.google.com/spreadsheets/d/1i1K42EZurcdozq0wc2JgR0RbqM470dLQ/edit#gid=1123351247'
+    cust_demo_url='https://docs.google.com/spreadsheets/d/1i1K42EZurcdozq0wc2JgR0RbqM470dLQ/edit#gid=2032610074'
+    cust_Addr_url='https://docs.google.com/spreadsheets/d/1i1K42EZurcdozq0wc2JgR0RbqM470dLQ/edit#gid=1901353749'
+
+    tran_xlsx_export_url = tran_url.replace('/edit#gid=', '/export?format=xlsx&gid=')
+    newcust_xlsx_export_url = newcust_url.replace('/edit#gid=', '/export?format=xlsx&gid=')
+    custdemo_xlsx_export_url = cust_demo_url.replace('/edit#gid=', '/export?format=xlsx&gid=')
+    custaddr_xlsx_export_url = cust_Addr_url.replace('/edit#gid=', '/export?format=xlsx&gid=')
+
+    transaction=pd.read_excel(tran_xlsx_export_url)
+    CustomerDemographic=pd.read_excel(custdemo_xlsx_export_url)
+    CustomerAddress=pd.read_excel(custaddr_xlsx_export_url)
+    NewCustomerList=pd.read_excel(newcust_xlsx_export_url)
+
 
 def get_female_marketing_effectiveness(new,old):
     if new==0 and old==0:
@@ -37,27 +53,12 @@ def get_female_marketing_effectiveness(new,old):
         sum=new+old
         return round(100*float(new/sum),2)    
 
-global transcaction
-global CustomerDemographic
-global CustomerAddress
-global NewCustomerList
 
 workbook_url='https://github.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/blob/main/KPMG_VI_New_raw_data_update_final.xlsx'
 
 #function for EDA
 def data_cleaning():
-    transcaction=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="Transactions")
-    CustomerDemographic=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerDemographic")
-    CustomerAddress=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerAddress")
-    NewCustomerList=pd.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="NewCustomerList")
-    
-    
-    reset_df_header(transcaction)
-    reset_df_header(CustomerAddress)
-    reset_df_header(NewCustomerList)    
-    NewCustomerList = NewCustomerList.loc[:, NewCustomerList.columns.notna()]
-    
-    
+  
     #Finding gender demograph industry wise for new acquired customers
     NewCustGender=NewCustomerList[['first_name','gender','job_industry_category']].groupby(['gender','job_industry_category']).count().reset_index()
     NewCustGender.rename(columns={"first_name":"Count"},inplace=True)
@@ -85,14 +86,14 @@ def data_cleaning():
     merged_customer_demo['m_effective%']=merged_customer_demo.apply(lambda x: get_female_marketing_effectiveness(x['new_male_count'],x['old_male_count']),axis=1)
     merged_customer_demo['u_effective%']=merged_customer_demo.apply(lambda x: get_female_marketing_effectiveness(x['new_unknown_count'],x['old_unknown_count']),axis=1)
     
-    transcaction.transaction_date=pd.to_datetime(transcaction.transaction_date)
-    transcaction['month']=pd.DatetimeIndex(transcaction.transaction_date).month_name()
-    transcaction.list_price=transcaction.list_price.astype('float')
-    transcaction.standard_cost=transcaction.standard_cost.astype('float')
-    transcaction['profit(K)']=(transcaction.list_price-transcaction.standard_cost)/1000
+    transaction.transaction_date=pd.to_datetime(transaction.transaction_date)
+    transaction['month']=pd.DatetimeIndex(transaction.transaction_date).month_name()
+    transaction.list_price=transaction.list_price.astype('float')
+    transaction.standard_cost=transaction.standard_cost.astype('float')
+    transaction['profit(K)']=(transaction.list_price-transaction.standard_cost)/1000
     
     #merging with customer demographic for further exploration
-    cust_expense=pd.merge(transcaction,CustomerDemographic,how='outer',on=['customer_id'])
+    cust_expense=pd.merge(transaction,CustomerDemographic,how='outer',on=['customer_id'])
     
     
     #gouping by each month, customer type and product type
@@ -103,7 +104,7 @@ def data_cleaning():
     profits['below_avg']=profits['profit(K)'].apply(lambda x: x if x<profits['profit(K)'].mean() else 0)
     
 
-    tab1,tab2,tab3=st.tabs(["Finding the spending cycle","Marketing Effectiveness","Let's talk profits"])
+    tab1,tab2,tab3,tab4=st.tabs(["Finding the spending cycle","Marketing Effectiveness","Lets talk profits","Our Inference"])
     with tab1:
         st.write('### Finding the spending cycle')
 
@@ -162,36 +163,30 @@ def data_cleaning():
         
     with tab3:
         st.write('#### What are the numbers from on online and offline sales')
-        st.write(transcaction.groupby(['online_order'])['profit(K)'].sum())
+        st.write(transaction.groupby(['online_order'])['profit(K)'].sum())
         st.write('#### What are the numbers for different class of product')
-        st.write(transcaction.groupby(['online_order','product_class'])['profit(K)'].sum())
+        st.write(transaction.groupby(['online_order','product_class'])['profit(K)'].sum())
         st.write('#### What are the numbers for different line of product')
-        st.write(transcaction.groupby(['online_order','product_class','product_line'])['profit(K)'].sum())
+        st.write(transaction.groupby(['online_order','product_class','product_line'])['profit(K)'].sum())
 
 #function for great_expectation computation
-def expectation():
-    transcaction=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="Transactions")
-    CustomerDemographic=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerDemographic")
-    CustomerAddress=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="CustomerAddress")
-    NewCustomerList=ge.read_excel(r"C:\gitlab\KPMG_VI_New_raw_data_update_final.xlsx\KPMG_VI_New_raw_data_update_final.xlsx",sheet_name="NewCustomerList")
+def expectation(): 
+    transaction,CustomerAddress,CustomerDemographic,NewCustomerList=get_data()    
     
-    reset_df_header(transcaction)
-    reset_df_header(CustomerAddress)
-    reset_df_header(NewCustomerList)    
-    NewCustomerList = NewCustomerList.loc[:, NewCustomerList.columns.notna()]
-            
-    #st.write(transcaction.expect_column_values_to_be_unique(column='brand'))
-    validation_result = transcaction.expect_column_values_to_be_in_set(
-        column="online_order",
-        value_set=[True,False],
-        result_format={
-            "result_format": "BOOLEAN_ONLY",
-            "unexpected_index_column_names": ["online_order"],
-            "return_unexpected_index_query": True,
-        },
-    )
-    #st.write(validation_result.success)
+# =============================================================================
+#     validation_result = transaction.expect_column_values_to_be_in_set(
+#         column="online_order",
+#         value_set=[True,False],
+#         result_format={
+#             "result_format": "BOOLEAN_ONLY",
+#             "unexpected_index_column_names": ["online_order"],
+#             "return_unexpected_index_query": True,
+#         },
+#     )
+#     #st.write(validation_result.success)
+# =============================================================================
     #st.write(validation_result)
+    
     HtmlFile = open("C:/INFO7374-32925-Algorithmic-Digital-Marketing/great_expectations/uncommitted/data_docs/local_site/validations/Assignment1_ge/__none__/20230208T183522.594784Z/eda493f1d25126cede31f768221bf0e2.html", 'r', encoding='utf-8')
     source_code = HtmlFile.read()
     components.html(source_code, width = 800, height = 800, scrolling = True)
@@ -199,18 +194,81 @@ def expectation():
 
 #function for EDA
 def profiling():    
-    pass
+
+    #Finding gender demograph industry wise for new acquired customers
+    NewCustGender=NewCustomerList[['first_name','gender','job_industry_category']].groupby(['gender','job_industry_category']).count().reset_index()
+    NewCustGender.rename(columns={"first_name":"Count"},inplace=True)
+    NewCustGender['new_female_count']=NewCustGender['Count'][NewCustGender['gender']=='Female']
+    NewCustGender['new_male_count']=NewCustGender['Count'][NewCustGender['gender']=='Male']
+    NewCustGender['new_unknown_count']=NewCustGender['Count'][NewCustGender['gender']=='U']
+    NewCustGender.drop(columns=['gender','Count'],inplace=True)
+    NewCustGender=NewCustGender.groupby('job_industry_category').sum().reset_index()
+    
+    #Finding gender demograph industry wise for new acquired customers
+    OldCustomerDemographic=CustomerDemographic[['name','gender','job_industry_category']].groupby(['gender','job_industry_category']).count().reset_index()
+    OldCustomerDemographic.rename(columns={"name":"Count"},inplace=True)
+    OldCustomerDemographic['old_female_count']=OldCustomerDemographic['Count'][OldCustomerDemographic['gender']=='Female']
+    OldCustomerDemographic['old_male_count']=OldCustomerDemographic['Count'][OldCustomerDemographic['gender']=='Male']
+    OldCustomerDemographic['old_unknown_count']=OldCustomerDemographic['Count'][OldCustomerDemographic['gender']=='U']
+    OldCustomerDemographic.drop(columns=['gender','Count'],inplace=True)
+    OldCustomerDemographic=OldCustomerDemographic.groupby('job_industry_category').sum().reset_index()
+    OldCustomerDemographic.rename(columns={"job_industry_category":"old_job_industry_category"},inplace=True)
+    
+    #Merged File
+    merged_customer_demo=pd.concat([NewCustGender,OldCustomerDemographic],axis='columns') #,how='inner',on=['job_industry_category'])
+    merged_customer_demo.drop(columns=['old_job_industry_category'],inplace=True)
+    
+    merged_customer_demo['f_effective%']=merged_customer_demo.apply(lambda x: get_female_marketing_effectiveness(x['new_female_count'],x['old_female_count']),axis=1)
+    merged_customer_demo['m_effective%']=merged_customer_demo.apply(lambda x: get_female_marketing_effectiveness(x['new_male_count'],x['old_male_count']),axis=1)
+    merged_customer_demo['u_effective%']=merged_customer_demo.apply(lambda x: get_female_marketing_effectiveness(x['new_unknown_count'],x['old_unknown_count']),axis=1)
+    
+    transaction.transaction_date=pd.to_datetime(transaction.transaction_date)
+    transaction['month']=pd.DatetimeIndex(transaction.transaction_date).month_name()
+    transaction.list_price=transaction.list_price.astype('float')
+    transaction.standard_cost=transaction.standard_cost.astype('float')
+    transaction['profit(K)']=(transaction.list_price-transaction.standard_cost)/1000
+    
+    #merging with customer demographic for further exploration
+    cust_expense=pd.merge(transaction,CustomerDemographic,how='outer',on=['customer_id'])
+    
+    
+    #gouping by each month, customer type and product type
+    profits=cust_expense.groupby(['month','wealth_segment','product_size'])['profit(K)'].sum().reset_index()
+    profits=profits.round(2)
+    
+    profits['above_avg']=profits['profit(K)'].apply(lambda x: x if x>profits['profit(K)'].mean() else 0)
+    profits['below_avg']=profits['profit(K)'].apply(lambda x: x if x<profits['profit(K)'].mean() else 0)
+    
+    tab1,tab2=st.tabs(['Profile Reports','Our Inference'])
+
+    with tab1:
+        profit_expander = st.expander(label='Profit Report')
+        with profit_expander:
+            'Profits Profile Report'
+            profit_report=ProfileReport((profits))
+            st_profile_report(profit_report)
+        merged_expander = st.expander(label='Customers Report')
+        with merged_expander:
+            'Customers Profile Report'
+            merged_customer_demo=ProfileReport((merged_customer_demo))
+            st_profile_report(merged_customer_demo)
+
+        tran_expander = st.expander(label='Transaction Report')
+        with tran_expander:
+            'Transaction Profile Report'
+            tran_repo_demo=ProfileReport((cust_expense))
+            st_profile_report(tran_repo_demo)            
+
 
 if __name__ == "__main__":
-    
+    get_data()
     option_selected = st.selectbox(
     'SELECT SECTION',
     ('EDA', 'Pandas Profiling & Data Quality Analysis', 'Great Expectations'))
-        
     
     if option_selected=="Pandas Profiling & Data Quality Analysis":
-        st.write("Fuck yeah")
-            
+        profiling()
+        
     if option_selected=="EDA":    
         st.write('#### Question to ask ourself')
         st.write('- How successful was the previous marketing campaign, what typr of clients did we attract most? ')
