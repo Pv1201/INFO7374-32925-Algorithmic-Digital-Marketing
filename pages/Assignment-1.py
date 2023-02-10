@@ -187,7 +187,7 @@ def expectation():
     
     #HtmlFile = open("https://raw.githubusercontent.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/main/Assignment-1/Assignment1_ge.html", 'r', encoding='utf-8')
     #source_code = HtmlFile.read()
-    components.html("https://raw.githubusercontent.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/main/Assignment-1/Assignment1_ge.html", width = 800, height = 800, scrolling = True)
+    components.html("https://negi97mohit.github.io/", width = 800, height = 800, scrolling = True)
 
 
 #function for EDA
