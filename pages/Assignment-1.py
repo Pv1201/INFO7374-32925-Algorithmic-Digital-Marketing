@@ -131,19 +131,19 @@ def data_cleaning():
     with tab2:
         st.write("### Sector of new customer acquired")
         fig1 = go.Figure()
-        fig1.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.new_female_count,orientation='h',marker_color='rgb(115,190,115)',name='New Female Customers'))
+        fig1.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo['f_effective%'],orientation='h',marker_color='rgb(115,190,115)',name='New Female Customers %'))
         fig1.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.old_female_count,orientation='h',marker_color='crimson',name='Old Female Customers'))
         fig1.update_layout(template='plotly_dark')
         st.plotly_chart(fig1,theme="streamlit")
         
         fig2=go.Figure()
-        fig2.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.new_male_count,orientation='h',marker_color='rgb(27,79,114)',name='New Male Customers'))
+        fig2.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo['m_effective%'],orientation='h',marker_color='rgb(27,79,114)',name='New Male Customers %'))
         fig2.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.old_male_count,orientation='h',marker_color='crimson',name='Old Male Customers'))
         fig2.update_layout(template='plotly_dark')
         st.plotly_chart(fig2)
         
         fig3=go.Figure()
-        fig3.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.new_unknown_count,orientation='h',marker_color='rgb(255, 220, 172)',name='New Unknow Customers'))
+        fig3.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo['u_effective%'],orientation='h',marker_color='rgb(255, 220, 172)',name='New Unknow Customers %'))
         fig3.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.old_unknown_count,orientation='h',marker_color='crimson',name='Old Unknow Customers'))
         fig3.update_layout(template='plotly_dark')
         st.plotly_chart(fig3)
@@ -155,12 +155,7 @@ def data_cleaning():
         fig4.update_layout(template='plotly_dark')
         st.plotly_chart(fig4)
         
-        st.write('#### How different is our current customer base different from the new acquired customer base, which will help us indicate which category of consumers we can cater the needs to.')
-        fig = go.Figure()
-        fig.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.new_female_count,orientation='h',marker_color='rgb(144,238,144)',name='New Female Customers'))
-        fig.add_trace(go.Bar(y=merged_customer_demo.job_industry_category, x=merged_customer_demo.old_female_count,orientation='h',marker_color='crimson',name='Old Female Customers'))
-        st.plotly_chart(fig)
-        
+                
     with tab3:
         st.write('#### What are the numbers from on online and offline sales')
         st.write(transaction.groupby(['online_order'])['profit(K)'].sum())
@@ -168,25 +163,73 @@ def data_cleaning():
         st.write(transaction.groupby(['online_order','product_class'])['profit(K)'].sum())
         st.write('#### What are the numbers for different line of product')
         st.write(transaction.groupby(['online_order','product_class','product_line'])['profit(K)'].sum())
-
+        
+        
+    with tab4:
+        st.write('#### Question to ask ourself')
+        st.write('##### How successful was the previous marketing campaign, what type of clients did we attract most? ')
+        st.write("""- Given we had more female clients in past, the marketing for that sector was not effective when compared with male customers""")
+        st.write("""-  0% Acquisition in Telecomm., Retail, Manufacturing, Health, Agriculture sectors for Unknown gender 
+                       demographic. Failed to create a market share. We even failed to acquire new customers in sector’s 
+                       where we had presence such as Health.
+                 """)
+      
+        st.write('#### How different is our current customer base different from the new acquired customer base, which will help us indicate which category of consumers we can cater the needs to.')
+        st.write(""" -  20.43% of avg. new male customer's acquired per sector.""")
+        st.write("""-  20.17% of avg. new female customer's acquired per sector.""")
+        st.write("""-  When compared with old customers, where we have 1690 female and1566 male customers
+                        we have successfully acquired more male customers ' 
+                 """)  
+        st.write('#### Where do we see the bussiness going with new customers acquired.')
+        st.write("""- Entertainment, financial, health and retail saw increase in male client's""")
+        st.write("""- Telecomm., manufacturing, IT and agriculture saw increase in female client's""")
+        
+        st.write("""- From the sunburst chart it is clear that across all month's medium category products
+                 purchased by Mass customer's are the profitable with October being the profitable
+                 with 326.59K in profits.""")
+        st.write("""- But out of all large category is the most profitable, reason being that all 3 customer 
+                     types have a tast for large category""")  
+        st.write("""- Small category is the least profitable branch""")
+        profit_expander = st.expander(label='Monthly Performance')
+        with profit_expander:
+            'Monthly performance'
+            monthly_profit=profits.groupby(['month'])['profit(K)'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['profit(K)'],ascending=False)
+            sorteded
+            monthly_profit=profits.groupby(['month','product_size'])['profit(K)'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['profit(K)'],ascending=False)
+            sorteded
+            
+        gainer_expander = st.expander(label='Gainers Performance')    
+        with gainer_expander:
+            'Top Gainers'
+            monthly_profit=profits.groupby(['month'])['above_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['above_avg'],ascending=False)
+            sorteded
+            monthly_profit=profits.groupby(['month','product_size'])['above_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['above_avg'],ascending=False)
+            sorteded
+            monthly_profit=profits.groupby(['month','wealth_segment','product_size'])['above_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['above_avg'],ascending=False)
+            sorteded
+            
+        loser_expander = st.expander(label='Losers Performance')    
+        with loser_expander:
+            'Top Losing'
+            monthly_profit=profits.groupby(['month'])['below_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['below_avg'],ascending=True)
+            sorteded
+            monthly_profit=profits.groupby(['month','product_size'])['below_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['below_avg'],ascending=True)
+            sorteded
+            monthly_profit=profits.groupby(['month','wealth_segment','product_size'])['below_avg'].sum().reset_index()
+            sorteded=monthly_profit.sort_values(by=['below_avg'],ascending=True)
+            sorteded            
+            
+            
+            
 #function for great_expectation computation
 def expectation():     
-# =============================================================================
-#     validation_result = transaction.expect_column_values_to_be_in_set(
-#         column="online_order",
-#         value_set=[True,False],
-#         result_format={
-#             "result_format": "BOOLEAN_ONLY",
-#             "unexpected_index_column_names": ["online_order"],
-#             "return_unexpected_index_query": True,
-#         },
-#     )
-#     #st.write(validation_result.success)
-# =============================================================================
-    #st.write(validation_result)
-    
-    #HtmlFile = open("https://raw.githubusercontent.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/main/Assignment-1/Assignment1_ge.html", 'r', encoding='utf-8')
-    #source_code = HtmlFile.read()
     components.iframe("https://negi97mohit.github.io/", width = 800, height = 800, scrolling = True)
 
 
@@ -245,9 +288,10 @@ def profiling():
             'Profits Profile Report'
             profit_report=ProfileReport((profits))
             st_profile_report(profit_report)
-        merged_expander = st.expander(label='Customers Report')
+            
+        merged_expander = st.expander(label='Merged Customers Report')
         with merged_expander:
-            'Customers Profile Report'
+            'Merged Customers Profile Report'
             merged_customer_demo=ProfileReport((merged_customer_demo))
             st_profile_report(merged_customer_demo)
 
@@ -255,8 +299,19 @@ def profiling():
         with tran_expander:
             'Transaction Profile Report'
             tran_repo_demo=ProfileReport((cust_expense))
-            st_profile_report(tran_repo_demo)            
+            st_profile_report(tran_repo_demo)
 
+        newcust_expander = st.expander(label='New customer Report')
+        with newcust_expander:
+            'New Customer Demograph Profile Report'
+            newCust_repo_demo=ProfileReport((NewCustGender))
+            st_profile_report(newCust_repo_demo)
+
+        oldcust_expander = st.expander(label='Old customer Report')
+        with oldcust_expander :
+            'Old Customer Demograph Profile Report'
+            oldCust_repo_demo=ProfileReport((OldCustomerDemographic))
+            st_profile_report(oldCust_repo_demo)
 
 if __name__ == "__main__":
     get_data()
@@ -268,10 +323,7 @@ if __name__ == "__main__":
         profiling()
         
     if option_selected=="EDA":    
-        st.write('#### Question to ask ourself')
-        st.write('- How successful was the previous marketing campaign, what typr of clients did we attract most? ')
-        st.write('- How different is our current customer base different from the new acquired customer base, which will help us indicate which category of consumers we can cater the needs to.')
-        st.write('- Where do we see the bussiness going with new customers acquired. Do we need to make changes, if YES then to what extend.')
+        st.write('#### EDA')
         data_cleaning()    
     
     if option_selected=='Great Expectations':
