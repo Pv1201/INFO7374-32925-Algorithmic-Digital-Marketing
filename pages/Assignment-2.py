@@ -24,7 +24,3 @@ st.set_page_config(
     page_title="Hello",
 )
 
-
-
-
-
