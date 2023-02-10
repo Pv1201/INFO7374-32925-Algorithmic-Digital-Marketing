@@ -185,7 +185,7 @@ def expectation():
 # =============================================================================
     #st.write(validation_result)
     
-    HtmlFile = open("C:/INFO7374-32925-Algorithmic-Digital-Marketing/great_expectations/uncommitted/data_docs/local_site/validations/Assignment1_ge/__none__/20230208T183522.594784Z/eda493f1d25126cede31f768221bf0e2.html", 'r', encoding='utf-8')
+    HtmlFile = open("https://raw.githubusercontent.com/Negi97Mohit/INFO7374-32925-Algorithmic-Digital-Marketing/main/Assignment-1/Assignment1_ge.html", 'r', encoding='utf-8')
     source_code = HtmlFile.read()
     components.html(source_code, width = 800, height = 800, scrolling = True)
 
