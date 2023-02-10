@@ -280,7 +280,7 @@ def profiling():
     profits['above_avg']=profits['profit(K)'].apply(lambda x: x if x>profits['profit(K)'].mean() else 0)
     profits['below_avg']=profits['profit(K)'].apply(lambda x: x if x<profits['profit(K)'].mean() else 0)
     
-    tab1,tab2=st.tabs(['Profile Reports','Our Inference'])
+    tab1,tab2,tab3=st.tabs(['Profile Reports','Data Quality Analysis','Our Inference'])
 
     with tab1:
         profit_expander = st.expander(label='Profit Report')
@@ -312,6 +312,11 @@ def profiling():
             'Old Customer Demograph Profile Report'
             oldCust_repo_demo=ProfileReport((OldCustomerDemographic))
             st_profile_report(oldCust_repo_demo)
+            
+    with tab2:
+        pass
+    with tab3:
+        pass
 
 if __name__ == "__main__":
     get_data()
